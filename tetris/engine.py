@@ -69,10 +69,15 @@ class BlockGenerator:
         distribution = self.type_distribution(selected_rows=selected_rows)
 
         # probability after normalization
+        total = 0.0
         probability = {}
         valid_blocks = sum(distribution.values())
         for type, amount in distribution.items():
             probability[type] = 1 - (float(amount) / valid_blocks)
+            total += probability[type]
+
+        for type, prob in probability.items():
+            probability[type] /= total
 
         return probability
 

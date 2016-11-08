@@ -80,7 +80,7 @@ class Board:
                 self.slots[x][y] = block
         self.growing_slots = self.generator.suggest_growing()
 
-    def merge_growing(self):
+    def go_up(self):
         slots = []
         for x in range(0, self.WIDTH):
             for y in range(1, self.HEIGHT):
@@ -105,7 +105,7 @@ class Board:
 
         output = ""
 
-        row_output = self.growing_slots
+        row_output = [" {} ".format(block) if block else "   " for block in self.growing_slots]
         output = output_row(row_output) + output
 
         row_output = [" - "] * self.WIDTH
@@ -117,8 +117,6 @@ class Board:
                 block = self.slots[x][y]
                 row_output.append(" {} ".format(block) if block else "   ")
             output = output_row(row_output) + output
-
-
 
         return output
 
