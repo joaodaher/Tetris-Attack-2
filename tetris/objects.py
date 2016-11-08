@@ -1,5 +1,6 @@
 # coding: utf-8
 from random import choice
+import numpy as np
 
 
 class BlockType:
@@ -50,18 +51,21 @@ class Board:
 
         self.generator = BlockGenerator(board=self)
 
-        self.slots = []
-        self.growing_slots = []
-        self.incoming_slots = []
+        self.slots = None
+        self.growing_slots = None
+        self.incoming_slots = None
 
         self.clear_board()
         self.fill_board()
 
+    @staticmethod
+    def empty():
+        return np.zeros((Board.WIDTH, Board.HEIGHT), dtype=object)
+
     def clear_board(self):
-        for _ in range(0, self.WIDTH):
-            self.slots.append([None] * self.HEIGHT)
-            self.incoming_slots.append([None] * self.HEIGHT)
-        self.growing_slots = [None] * self.WIDTH
+        self.slots = self.empty()
+        self.incoming_slots = self.empty()
+        self.growing_slots = np.zeros(self.HEIGHT, dtype=bool)
 
     def move_left(self, x, y):
         return self.move_right(x=x+1, y=y)
@@ -77,27 +81,22 @@ class Board:
         for x in range(0, self.WIDTH):
             for y in range(0, choice(possible_heights)):
                 block = self.generator.suggest(1)[0]
-                self.slots[x][y] = block
+                self.slots[x,y] = block
         self.growing_slots = self.generator.suggest_growing()
 
     def go_up(self):
-        slots = []
-        for x in range(0, self.WIDTH):
-            for y in range(1, self.HEIGHT):
-                slots[x][y] = self.slots[x][y-1]
+        slots = np.vstack((self.slots, self.growing_slots))
 
-        slots[0] = self.growing_slots
         self.growing_slots = self.generator.suggest_growing()
         self.slots = slots
 
     @property
+    def filled_slots(self):
+        return np.count_nonzero(self.slots)
+
+    @property
     def empty_slots(self):
-        n = 0
-        for row in self.slots:
-            for slot in row:
-                if slot is None:
-                    n += 1
-        return n
+        return np.size(self.slots) - self.filled_slots
 
     def __str__(self):
         def output_row(row):

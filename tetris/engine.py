@@ -52,8 +52,8 @@ class BlockGenerator:
         histogram = defaultdict(int)
         for y in selected_rows:
             for x in range(0, self.board.WIDTH):
-                slot = self.board.slots[x][y]
-                if slot is None: continue
+                slot = self.board.slots[x,y]
+                if not bool(slot): continue
                 histogram[slot.type] += 1
         return histogram
 
