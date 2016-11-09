@@ -1,11 +1,11 @@
 # coding: utf-8
 from collections import defaultdict
-from random import randrange
+from random import randrange, choice
 
-from tetris.objects import Block
+from tetris.objects import BLOCK_TYPES
 
 
-class BlockGenerator:
+class BlockTypeGenerator:
 
     class SUGGEST_MODE:
         FAST = 'fast'
@@ -35,7 +35,7 @@ class BlockGenerator:
         elif mode == self.SUGGEST_MODE.BOTTOM:
             block_generator = self._bottom_block_generator
         else:
-            block_generator = Block
+            block_generator = self._random_block_generator
 
         new_blocks = [block_generator() for _ in range(0, amount)]
 
@@ -96,7 +96,7 @@ class BlockGenerator:
         for type, prob in probability.items():
             ceil = floor + int(prob * 100)
             if dice in range(floor, ceil):
-                return Block(type=type)
+                return type
             floor = ceil
 
     def _bottom_block_generator(self, n=2):
@@ -113,7 +113,7 @@ class BlockGenerator:
         for type, prob in probability.items():
             ceil = floor + int(prob * 100)
             if dice in range(floor, ceil):
-                return Block(type=type)
+                return type
             floor = ceil
 
     def _upper_block_generator(self):
@@ -122,3 +122,6 @@ class BlockGenerator:
         :return: A block
         """
         pass
+
+    def _random_block_generator(self):
+        return choice(BLOCK_TYPES)
