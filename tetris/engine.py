@@ -2,7 +2,7 @@
 from collections import defaultdict
 from random import randrange, choice
 
-from tetris.objects import BLOCK_TYPES
+from tetris.objects.blocks import BLOCK_TYPES
 
 
 class BlockTypeGenerator:
@@ -125,3 +125,7 @@ class BlockTypeGenerator:
 
     def _random_block_generator(self):
         return choice(BLOCK_TYPES)
+
+
+class PowerUpGenerator:
+    pass

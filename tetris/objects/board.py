@@ -1,192 +1,19 @@
 # coding: utf-8
 from random import choice
+
 import numpy as np
 
-from tetris import states
+from tetris.objects import ChronosMixin
+from tetris.objects.blocks import Block
 
 
-class BlockType:
-    def __init__(self, name, color, skin=None, strength=1, height=1, width=1):
-        self.name = name
-        self.color = color
-        self.strength = strength
-
-        self.height = height
-        self.width = width
-        self.skin = skin
-
-    @classmethod
-    def generate_types(cls):
-        return [
-            BlockType('triangle', "#32C8FF"),
-            BlockType('star', "#F6FF00"),
-            BlockType('circle', "#63C400"),
-            BlockType('heart', "#FF0000"),
-            BlockType('diamond', "#C832FF"),
-        ]
-
-    def __str__(self):
-        return self.name[0]
-
-
-BLOCK_TYPES = BlockType.generate_types()
-
-
-class Block:
-    def __init__(self, slots, x, y, type=None):
-        self.slots = slots
-        self.x = x
-        self.y = y
-
-        self.type = type or choice(BLOCK_TYPES)
-        self.strength = self.type.strength
-
-    def matches(self, block):
-        return self.type == block.type
-
-    @property
-    def has_left(self):
-        return self.x > 0
-
-    @property
-    def left(self):
-        if self.has_left:
-            return self.slots[self.x-1, self.y]
-        else:
-            raise states.OutOfBoard()
-
-    @property
-    def has_right(self):
-        return self.x < self.slots.shape[1]
-
-    @property
-    def right(self):
-        if self.has_right:
-            return self.slots[self.x + 1, self.y]
-        else:
-            raise states.OutOfBoard()
-
-    @property
-    def has_down(self):
-        return self.y > 0
-
-    @property
-    def down(self):
-        if self.has_down:
-            return self.slots[self.x, self.y - 1]
-        else:
-            raise states.OutOfBoard()
-
-    @property
-    def has_up(self):
-        return self.y < self.slots.shape[0]
-
-    @property
-    def up(self):
-        if self.has_up:
-            return self.slots[self.x, self.y + 1]
-        else:
-            raise states.OutOfBoard()
-
-    @property
-    def is_floating(self):
-        try:
-            return self.down is None
-        except states.OutOfBoard:
-            return False
-
-    def to_fall(self):
-        """
-        Applies gravity to the block
-        :return: Number of slots to fall
-        """
-        if self.is_floating:
-            for y in range(self.y-1, -1, -1):
-                target = self.slots[self.x, y]
-                if target:
-                    return self.y - y - 1
-        return 0
-
-    def fall(self):
-        if self.is_floating:
-            self.move_to(x=self.x, y=self.y-1)
-            return True
-        return False
-
-    def move_to(self, x, y):
-        if x < 0 or x > self.slots.shape[1] or y < 0 or y > self.slots.shape[0]:
-            raise states.OutOfBoard()
-
-        target_block = self.slots[x, y]
-        target_block.x = self.x
-        target_block.y = self.y
-        self.slots[self.x, self.y] = target_block
-
-        self.x = x
-        self.y = y
-        self.slots[x, y] = self
-
-    def die(self):
-        self.slots[self.x, self.y] = None
-
-    @property
-    def combos(self):
-        # look horizontal
-        combos_w = [self]
-
-        pivot = self
-        while pivot.has_left:
-            left = pivot.left
-            if pivot.matches(left):
-                combos_w.append(left)
-            else:
-                break
-
-        pivot = self
-        while pivot.has_right:
-            right = pivot.right
-            if pivot.matches(right):
-                combos_w.append(right)
-            else:
-                break
-
-        # look vertical
-        combos_h = [self]
-
-        pivot = self
-        while pivot.has_up:
-            up = pivot.up
-            if pivot.matches(up):
-                combos_h.append(up)
-            else:
-                break
-
-        pivot = self
-        while pivot.has_down:
-            down = pivot.down
-            if pivot.matches(down):
-                combos_h.append(down)
-            else:
-                break
-
-        all_combos = []
-        if len(combos_w) > 2:
-            all_combos.extend(combos_w)
-        if len(combos_h) > 2:
-            all_combos.extend(combos_h)
-        return all_combos
-
-    def __str__(self):
-        return str(self.type)
-
-
-class Board:
+class Board(ChronosMixin):
     HEIGHT = 15
     WIDTH = 6
 
     RAISE_TICK_MOD = 10
 
-    def __init__(self):
+    def __init__(self, speed=1):
         from tetris.engine import BlockTypeGenerator
 
         self.generator = BlockTypeGenerator(board=self)
@@ -195,10 +22,15 @@ class Board:
         self.growing_slots = None
         self.incoming_slots = None
 
-        self.tick = 0
+        self.powerups = []
+
+        self.ticks = 0
+        self.speed = speed
 
         self.clear_board()
         self.fill_board()
+
+        super().__init__()
 
     @staticmethod
     def empty():
@@ -265,10 +97,12 @@ class Board:
             if changed:
                 stable = False
 
-        if self.tick % self.RAISE_TICK_MOD == 0:
+            self.wait()
+
+        if self.ticks % self.RAISE_TICK_MOD == 0:
             self.go_up()
 
-        self.tick += 1
+        self.ticks += self.speed
 
     def fill_board(self, height=7):
         possible_heights = [height, height-1, height-2]
@@ -348,16 +182,3 @@ class Board:
                 row_output.append(" {} ".format(block_str(block)) if block else "   ")
             output = output_row(row_output) + output
         return output
-
-
-class Player:
-    pass
-
-
-class Match:
-    pass
-
-
-if __name__ == "__main__":
-    b = Board()
-    print(b)

@@ -6,7 +6,7 @@ from twisted.internet import protocol
 from twisted.python import log
 
 from server.protocol import JsonReceiver
-from tetris.game import Game, GameError
+from tetris.objects.game import Game
 
 
 class GameProtocol(JsonReceiver):

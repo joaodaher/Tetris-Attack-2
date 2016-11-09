@@ -1,2 +1,3 @@
+
 class OutOfBoard(Exception):
     pass

@@ -7,7 +7,7 @@ from twisted.internet import protocol, stdio
 from twisted.protocols import basic
 
 from server.protocol import JsonReceiver
-from tetris.game import Game
+from tetris.objects.game import Game
 
 
 class UserInputProtocol(basic.LineReceiver):
@@ -38,7 +38,7 @@ class GameClientProtocol(JsonReceiver):
         stdio.StandardIO(UserInputProtocol(self.userInputReceived))
         self.out("Connected!")
         self.printHelp()
-        self.printBoard()
+        # self.printBoard()
 
     def userInputReceived(self, string):
         """
@@ -108,7 +108,7 @@ class GameClientProtocol(JsonReceiver):
 
     def objectReceived(self, obj):
         self.debug("Data received: {0}".format(obj))
-        if obj.has_key('command'):
+        if 'command' in obj:
             command = obj['command']
             params = obj.get('params', {})
             self.receiveCommand(command, **params)
@@ -156,17 +156,11 @@ class GameClientProtocol(JsonReceiver):
     def serverStarted(self, side):
         self.side = side
         self.out("Game started, you're playing with {0}".format(side))
-        self.printNextTurnMessage()
+        # self.printNextTurnMessage()
 
     def serverOpponentDisconnected(self):
         self.out("Your opponent has disconnected, game is over")
         self.exitGame()
-
-    def printNextTurnMessage(self):
-        if self.game.current_player == self.side:
-            self.out("It's your turn now")
-        else:
-            self.out("It's your opponent's turn now")
 
     def printBoard(self):
         board = [[cell or ' ' for cell in col] for col in self.game.board]
@@ -182,6 +176,7 @@ class GameClientProtocol(JsonReceiver):
                  "",
                  ]
         self.out("\n".join(lines).format(*board))
+
 
 class GameClientFactory(protocol.ClientFactory):
     protocol = GameClientProtocol

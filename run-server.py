@@ -1,5 +1,4 @@
 #!/bin/sh
-# twistd --nodaemon --python run-server.tac
 from twisted.internet import reactor
 
 
