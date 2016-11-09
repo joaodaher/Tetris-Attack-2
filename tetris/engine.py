@@ -23,7 +23,7 @@ class BlockGenerator:
         """
         Suggest a new block type
         :param amount: Total of block types to suggest
-        :param mode: One of BlockGenerator.SUGEGST_MODE
+        :param mode: One of BlockGenerator.SUGGEST_MODE
         :return: A list of blocks
         """
         if mode is None: mode = self.SUGGEST_MODE.FAST
@@ -53,7 +53,8 @@ class BlockGenerator:
         for y in selected_rows:
             for x in range(0, self.board.WIDTH):
                 slot = self.board.slots[x,y]
-                if not bool(slot): continue
+                if not bool(slot):
+                    continue
                 histogram[slot.type] += 1
         return histogram
 

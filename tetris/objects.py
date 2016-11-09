@@ -119,6 +119,26 @@ class Board:
 
         return output
 
+    @staticmethod
+    def slots_to_str(slots, h=None, w=None, block_str=str):
+        def output_row(row):
+            return "\n|{}|".format("|".join(row))
+
+        if not h:
+            h = slots.shape[1]
+        if not w:
+            w = slots.shape[0]
+
+        output = ""
+        for y in range(0, h):
+            row_output = []
+            for x in range(0, w):
+                block = slots[x, y]
+                row_output.append(" {} ".format(block_str(block)) if block else "   ")
+            output = output_row(row_output) + output
+        return output
+
+
 
 class Player:
     pass
