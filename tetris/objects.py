@@ -114,7 +114,7 @@ class Block:
         return False
 
     def move_to(self, x, y):
-        if x < 0 or x > self.slots.shape[1] or y < 0 or x > self.slots.shape[0]:
+        if x < 0 or x > self.slots.shape[1] or y < 0 or y > self.slots.shape[0]:
             raise states.OutOfBoard()
 
         target_block = self.slots[x, y]
