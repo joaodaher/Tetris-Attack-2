@@ -1,7 +1,9 @@
 # coding: utf-8
 from random import choice
 
-from tetris import states
+from engine import error
+from engine import states
+from engine.states import Stable, Explode, Endboard
 
 
 class BlockState:
@@ -39,7 +41,7 @@ BLOCK_TYPES = BlockType.generate_types()
 
 
 class Block:
-    def __init__(self, slots, x, y, type=None):
+    def __init__(self, slots, x, y, type=None, age=0):
         self.slots = slots
         self.x = x
         self.y = y
@@ -47,16 +49,23 @@ class Block:
         self.type = type or choice(BLOCK_TYPES)
         self.strength = self.type.strength
 
-    @property
-    def state(self):
-        if self.is_floating:
-            return BlockState.FALLING
-        if self.combos:
-            return BlockState.EXPLODING
-        if not self.has_up:
-            return BlockState.PRESSURE
+        self.state = Stable(block=self)
+        self.age = age
 
-        return BlockState.STABLE
+    def tick(self):
+        try:
+            self.age += 1
+            if self.state == "FALLING":
+                self.fall()
+            elif self.state == "UNPRESSED":
+                self.strength = self.type.strength
+            elif self.state == "MOREPRESS":
+                self.strength -= 1
+            next(self.state)
+        except Explode:
+            self.die()
+        except Endboard as e:
+            raise e
 
     def matches(self, block):
         return self.type == block.type
@@ -92,24 +101,28 @@ class Block:
         if self.has_down:
             return self.slots[self.x, self.y - 1]
         else:
-            raise states.OutOfBoard()
+            raise error.OutOfBoard()
 
     @property
     def has_up(self):
         return self.y < self.slots.shape[0]
 
     @property
+    def is_crushed(self):
+        return self.strength == 0
+
+    @property
     def up(self):
         if self.has_up:
             return self.slots[self.x, self.y + 1]
         else:
-            raise states.OutOfBoard()
+            raise error.OutOfBoard()
 
     @property
     def is_floating(self):
         try:
             return self.down is None
-        except states.OutOfBoard:
+        except error.OutOfBoard:
             return False
 
     def to_fall(self):
@@ -132,7 +145,7 @@ class Block:
 
     def move_to(self, x, y):
         if x < 0 or x > self.slots.shape[1] or y < 0 or y > self.slots.shape[0]:
-            raise states.OutOfBoard()
+            raise error.OutOfBoard()
 
         target_block = self.slots[x, y]
         target_block.x = self.x

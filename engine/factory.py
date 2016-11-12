@@ -2,7 +2,7 @@
 from collections import defaultdict
 from random import randrange, choice
 
-from tetris.objects.blocks import BLOCK_TYPES
+from engine.objects.blocks import BLOCK_TYPES
 
 
 class BlockTypeGenerator:

@@ -3,8 +3,8 @@ from random import choice
 
 import numpy as np
 
-from tetris.objects import ChronosMixin
-from tetris.objects.blocks import Block
+from engine.objects import ChronosMixin
+from engine.objects.blocks import Block
 
 
 class Board(ChronosMixin):
@@ -14,7 +14,7 @@ class Board(ChronosMixin):
     RAISE_TICK_MOD = 10
 
     def __init__(self, speed=1):
-        from tetris.engine import BlockTypeGenerator
+        from engine.factory import BlockTypeGenerator
 
         self.generator = BlockTypeGenerator(board=self)
 
@@ -88,15 +88,14 @@ class Board(ChronosMixin):
     def tick(self):
         stable = False
         while not stable:
-            stable = True
-
-            changed = self.apply_gravity()
-            if changed:
-                stable = False
-            changed = self.apply_combo()
-            if changed:
-                stable = False
-
+            stable = True  # stable, unless one block says otherwise
+            for x in self.travel_up:
+                for y in self.travel_down:
+                    block = self.slots[x, y]
+                    if not block: continue
+                    self.slots[x, y].tick()
+                    if block.state != "STABLE":
+                        stable = False  # i say otherwise!
             self.wait()
 
         if self.ticks % self.RAISE_TICK_MOD == 0:
@@ -182,3 +181,6 @@ class Board(ChronosMixin):
                 row_output.append(" {} ".format(block_str(block)) if block else "   ")
             output = output_row(row_output) + output
         return output
+
+b = Board()
+b.tick()
