@@ -1,7 +1,5 @@
 # coding: utf-8
-import threading
-
-from tetris.objects.board import Board
+from engine.objects.board import Board
 
 
 class Player:

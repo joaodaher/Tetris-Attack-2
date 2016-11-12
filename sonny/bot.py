@@ -1,4 +1,4 @@
-from tetris.objects import BLOCK_TYPES, Board
+from engine.objects import BLOCK_TYPES, Board
 import numpy as np
 
 
