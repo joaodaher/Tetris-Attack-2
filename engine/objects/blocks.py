@@ -2,15 +2,7 @@
 from random import choice
 
 from engine import error
-from engine import states
-from engine.states import Stable, Explode, Endboard
-
-
-class BlockState:
-    STABLE = 'stable'
-    FALLING = 'falling'
-    PRESSURE = 'pressure'
-    EXPLODING = 'exploding'
+from engine.states import Stable, Explode
 
 
 class BlockType:
@@ -41,56 +33,59 @@ BLOCK_TYPES = BlockType.generate_types()
 
 
 class Block:
-    def __init__(self, slots, x, y, type=None, age=0):
-        self.slots = slots
+    def __init__(self, board, x, y, type=None, age=0):
+        self.board = board
+        self.slots = board.slots
         self.x = x
         self.y = y
 
         self.type = type or choice(BLOCK_TYPES)
         self.strength = self.type.strength
 
-        self.state = Stable(block=self)
+        self.state = Stable(block=self, duration=0.0)
         self.age = age
+
+    @property
+    def slot_width(self):
+        return self.slots.shape[0]
+
+    @property
+    def slot_height(self):
+        return self.slots.shape[1]
 
     def tick(self):
         try:
             self.age += 1
-            if self.state == "FALLING":
+            if self.state.name == "FALLING":
                 self.fall()
-            elif self.state == "UNPRESSED":
+            elif self.state.name == "UNPRESSED":
                 self.strength = self.type.strength
-            elif self.state == "MOREPRESS":
+            elif self.state.name == "MOREPRESS":
                 self.strength -= 1
-            next(self.state)
+            self.state = next(self.state)
         except Explode:
             self.die()
-        except Endboard as e:
-            raise e
-
-    def matches(self, block):
-        return self.type == block.type
 
     @property
     def has_left(self):
         return self.x > 0
 
-    @property
     def left(self):
-        if self.has_left:
-            return self.slots[self.x - 1, self.y]
-        else:
-            raise states.OutOfBoard()
+        pivot = self.x
+        while pivot > 0:
+            pivot -= 1
+            yield self.slots[pivot, self.y]
 
     @property
     def has_right(self):
-        return self.x < self.slots.shape[1]
+        return self.x < self.slot_width
 
     @property
     def right(self):
-        if self.has_right:
-            return self.slots[self.x + 1, self.y]
-        else:
-            raise states.OutOfBoard()
+        pivot = self.x
+        while pivot < self.slot_width - 1:
+            pivot += 1
+            yield self.slots[pivot, self.y]
 
     @property
     def has_down(self):
@@ -98,31 +93,31 @@ class Block:
 
     @property
     def down(self):
-        if self.has_down:
-            return self.slots[self.x, self.y - 1]
-        else:
-            raise error.OutOfBoard()
+        pivot = self.y
+        while pivot > 0:
+            pivot -= 1
+            yield self.slots[self.x, pivot]
 
     @property
     def has_up(self):
-        return self.y < self.slots.shape[0]
+        return self.y < self.slot_height
+
+    @property
+    def up(self):
+        pivot = self.y
+        while pivot < self.slot_height - 1:
+            pivot += 1
+            yield self.slots[self.x, pivot]
 
     @property
     def is_crushed(self):
         return self.strength == 0
 
     @property
-    def up(self):
-        if self.has_up:
-            return self.slots[self.x, self.y + 1]
-        else:
-            raise error.OutOfBoard()
-
-    @property
     def is_floating(self):
         try:
-            return self.down is None
-        except error.OutOfBoard:
+            return None in self.down
+        except StopIteration:
             return False
 
     def to_fall(self):
@@ -144,12 +139,13 @@ class Block:
         return False
 
     def move_to(self, x, y):
-        if x < 0 or x > self.slots.shape[1] or y < 0 or y > self.slots.shape[0]:
+        if x < 0 or x > self.slots.shape[0] or y < 0 or y > self.slots.shape[1]:
             raise error.OutOfBoard()
 
         target_block = self.slots[x, y]
-        target_block.x = self.x
-        target_block.y = self.y
+        if target_block:
+            target_block.x = self.x
+            target_block.y = self.y
         self.slots[self.x, self.y] = target_block
 
         self.x = x
@@ -160,51 +156,19 @@ class Block:
         self.slots[self.x, self.y] = None
 
     @property
-    def combos(self):
-        # look horizontal
-        combos_w = [self]
-
-        pivot = self
-        while pivot.has_left:
-            left = pivot.left
-            if pivot.matches(left):
-                combos_w.append(left)
-            else:
-                break
-
-        pivot = self
-        while pivot.has_right:
-            right = pivot.right
-            if pivot.matches(right):
-                combos_w.append(right)
-            else:
-                break
-
-        # look vertical
-        combos_h = [self]
-
-        pivot = self
-        while pivot.has_up:
-            up = pivot.up
-            if pivot.matches(up):
-                combos_h.append(up)
-            else:
-                break
-
-        pivot = self
-        while pivot.has_down:
-            down = pivot.down
-            if pivot.matches(down):
-                combos_h.append(down)
-            else:
-                break
-
-        all_combos = []
-        if len(combos_w) > 2:
-            all_combos.extend(combos_w)
-        if len(combos_h) > 2:
-            all_combos.extend(combos_h)
-        return all_combos
+    def is_combo(self):
+        return self in self.board.combos
 
     def __str__(self):
         return str(self.type)
+
+    def __repr__(self):
+        return "{}[{},{}] | {}".format(self.type, self.x, self.y, self.state)
+
+    def matches(self, other):
+        if other:
+            return self.type == other.type
+        return False
+
+    def __hash__(self):
+        return hash((self.x, self.y))

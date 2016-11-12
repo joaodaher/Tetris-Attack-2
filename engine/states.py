@@ -4,7 +4,7 @@ def block_is_floating(block):
 
 
 def block_is_combo(block):
-    return bool(block.combos)
+    return block.is_combo
 
 
 def block_is_pressing(block):
@@ -24,7 +24,7 @@ class Condition:
 
     def evaluate(self):
         next_state = self.positive if self.method(**self.kwargs) else self.negative
-        return next_state(**self.kwargs)
+        return next(next_state(**self.kwargs))
 
 
 class IsFloatingCondition(Condition):
@@ -73,18 +73,12 @@ class BinaryState:
         self.condition = condition
         self.duration = duration
 
-    def __iter__(self):
-        if self.duration > 0:
-            return self
-        else:
-            return self.condition.evaluate()
-
     def __next__(self):
-        self.duration -= 1.0
-        if self.duration == 0.0:
-            return self.condition.evaluate()
-        else:
+        if self.duration > 0.0:
+            self.duration -= 1.0
             return self
+        else:
+            return self.condition.evaluate()
 
     def __str__(self):
         return self.name
@@ -95,15 +89,12 @@ class ExitState(StopIteration):
         self.name = name
         self.duration = duration
 
-    def __iter__(self):
-        return self
-
     def __next__(self, speed=1.0):
-        self.duration -= speed
-        if self.duration == 0.0:
-            raise self
-        else:
+        if self.duration > 0.0:
+            self.duration -= 1.0
             return self
+        else:
+            raise self
 
     def __str__(self):
         return self.name
@@ -131,53 +122,40 @@ class Swapping(BinaryState):
 
 
 class Standing(BinaryState):
-    def __init__(self, block, duration=1.0):
+    def __init__(self, block, duration=0.0):
         name = "STANDING"
         condition = IsPressingCondition(block)
         super().__init__(name, condition, duration)
 
 
 class Unpressed(BinaryState):
-    def __init__(self, block, duration=1.0):
+    def __init__(self, block, duration=0.0):
         name = "UNPRESSED"
         condition = IsComboCondition(block)
         super().__init__(name, condition, duration)
 
 
 class MorePressed(BinaryState):
-    def __init__(self, block, duration=1.0):
+    def __init__(self, block, duration=0.0):
         name = "MOREPRESSED"
         condition = IsComboCondition(block)
         super().__init__(name, condition, duration)
 
 
 class Pressed(BinaryState):
-    def __init__(self, block, duration=1.0):
+    def __init__(self, block, duration=0.0):
         name = "PRESSED"
         condition = IsComboCondition(block)
         super().__init__(name, condition, duration)
 
 
 class Explode(ExitState):
-    def __init__(self, duration=1.0):
+    def __init__(self, block, duration=1.0):
         name = "EXPLODE"
         super().__init__(name, duration)
 
 
 class Endboard(ExitState):
-    def __init__(self, duration=1.0):
+    def __init__(self, block, duration=1.0):
         name = "ENDBOARD"
         super().__init__(name, duration)
-
-
-class StateMachine:
-    def __init__(self, entry_state, block):
-        self.state = entry_state
-        self.block = block
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        self.state = self.state.next()
-        return self
