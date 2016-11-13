@@ -3,11 +3,11 @@ from random import choice
 
 import numpy as np
 
-from engine.objects import ChronosMixin
+from engine import threaded
 from engine.objects.blocks import Block
 
 
-class Board(ChronosMixin):
+class Board:
     HEIGHT = 15
     WIDTH = 6
 
@@ -67,36 +67,28 @@ class Board(ChronosMixin):
                     blocks[x] = block
         return blocks
 
-    def apply_gravity(self):
-        changed = []
-        for x in self.travel_right:
-            for y in self.travel_down:
-                block = self.slots[x, y]
-                if block:
-                    if block.fall():
-                        changed.append(block)
-        return changed
+    @threaded
+    def _ptick(self, x):
+        for y in self.travel_up:
+            block = self.slots[x, y]
+            if not block: continue
+            self.slots[x, y].tick()
 
-    def apply_combo(self):
-        combos = []
-        for x in self.travel_right:
-            for y in self.travel_down:
-                block = self.slots[x, y]
-                if block:
-                    combos.append(block.combos)
-                    for combo_block in combos:
-                        combo_block.die()
-        return combos
+        print("[{:.2f}] Ticking".format(x / self.WIDTH * 100))
 
-    def tick(self):
+    def tick(self, concurrent=False):
         self.locate_combos()
 
-        for x in self.travel_right:
-            for y in self.travel_up:
-                block = self.slots[x, y]
-                if not block: continue
-                self.slots[x, y].tick()
-            print("[{:.2f}] Ticking".format(x/self.WIDTH*100))
+        if concurrent:
+            for x in self.travel_right:
+                self._ptick(x).join()
+        else:
+            for x in self.travel_right:
+                for y in self.travel_up:
+                    block = self.slots[x, y]
+                    if not block: continue
+                    self.slots[x, y].tick()
+                print("[{:.2f}] Ticking".format(x/self.WIDTH*100))
 
         self.ticks += self.speed
         # if self.ticks % self.RAISE_TICK_MOD == 0:
@@ -108,14 +100,14 @@ class Board(ChronosMixin):
         for x in self.travel_right:
             for y in self.travel_up:
                 block = self.slots[x, y]
-                if not block or block in self.combos:
+                if not block or block in self.combos or block.state.name == "FALLING":
                     continue
 
                 # look horizontal
                 combos_w = [block]
 
                 for pivot in block.right:
-                    if block.matches(pivot) and pivot.state != "FALLING":
+                    if block.matches(pivot) and pivot.state.name != "FALLING":
                         combos_w.append(pivot)
                     else:
                         break
@@ -149,12 +141,12 @@ class Board(ChronosMixin):
             y = self.HEIGHT - 1
 
         available_x = list(range(0, self.WIDTH))
-        for _ in range(0, n):
-            random.shuffle(available_x)
+        random.shuffle(available_x)
+        available_x = available_x[:n]
+        types = self.generator.suggest(n, self.generator.SUGGEST_MODE.TOP)
 
-            type = self.generator.suggest(1)[0]
-            x = available_x.pop()
-            block = Block(board=self, x=x, y=y, type=type)
+        for block_type, x in zip(types, available_x):
+            block = Block(board=self, x=x, y=y, type=block_type)
             self.slots[x, y] = block
 
     def go_up(self):
@@ -242,5 +234,5 @@ if __name__ == '__main__':
 
         i += 1
         b.plot()
-        b.tick()
-        # time.sleep(2)
+        b.tick(concurrent=True)
+        # time.sleep(0.5)

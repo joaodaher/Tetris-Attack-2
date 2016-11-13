@@ -89,15 +89,7 @@ class BlockTypeGenerator:
         """
         probability = self.block_probability()
 
-        # throw the dice
-        dice = randrange(0, 100)
-
-        floor = 0
-        for type, prob in probability.items():
-            ceil = floor + int(prob * 100)
-            if dice in range(floor, ceil):
-                return type
-            floor = ceil
+        return self._throw_dice(probability)
 
     def _bottom_block_generator(self, n=2):
         """
@@ -106,6 +98,27 @@ class BlockTypeGenerator:
         """
         probability = self.block_probability(selected_rows=range(0, n))
 
+        return self._throw_dice(probability)
+
+    def _upper_block_generator(self):
+        """
+        Generate a block considering N upper rows
+        :return: A block
+        """
+        blocks = [block for block in self.board.roof_blocks if block]
+        n = len(blocks)
+        probability = defaultdict(float)
+        for block in blocks:
+            if not bool(block):
+                continue
+            probability[block.type] += (1/n)
+
+        return self._throw_dice(probability)
+
+    def _random_block_generator(self):
+        return choice(BLOCK_TYPES)
+
+    def _throw_dice(self, probability):
         # throw the dice
         dice = randrange(0, 100)
 
@@ -116,15 +129,8 @@ class BlockTypeGenerator:
                 return type
             floor = ceil
 
-    def _upper_block_generator(self):
-        """
-        Generate a block considering N upper rows
-        :return: A block
-        """
-        pass
-
-    def _random_block_generator(self):
-        return choice(BLOCK_TYPES)
+        # fallback
+        return self._random_block_generator()
 
 
 class PowerUpGenerator:
