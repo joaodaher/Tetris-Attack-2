@@ -3,17 +3,17 @@ from random import choice
 
 import numpy as np
 
-from engine.objects import ChronosMixin
+from engine import threaded
 from engine.objects.blocks import Block
 
 
-class Board(ChronosMixin):
+class Board:
     HEIGHT = 15
     WIDTH = 6
 
     RAISE_TICK_MOD = 10
 
-    def __init__(self, speed=1):
+    def __init__(self, speed=1, auto_fill=True):
         from engine.factory import BlockTypeGenerator
 
         self.generator = BlockTypeGenerator(board=self)
@@ -28,26 +28,48 @@ class Board(ChronosMixin):
         self.speed = speed
 
         self.clear_board()
-        self.fill_board()
+        if auto_fill:
+            self.fill_board()
+
+        self.combos = []
 
         super().__init__()
 
     @staticmethod
-    def empty():
-        return np.zeros((Board.WIDTH, Board.HEIGHT), dtype=object)
+    def empty(t=None):
+        if isinstance(t, bool):
+            data_type = bool
+        else:
+            data_type = object
+
+        matrix = np.empty((Board.WIDTH, Board.HEIGHT), dtype=data_type)
+        if t is True:
+            matrix = np.logical_not(matrix)
+        return matrix
 
     def clear_board(self):
         self.slots = self.empty()
         self.incoming_slots = self.empty()
-        self.growing_slots = np.zeros(self.HEIGHT, dtype=bool)
+        self.growing_slots = np.empty(self.HEIGHT, dtype=bool)
 
     def move_left(self, x, y):
-        return self.move_right(x=x+1, y=y)
+        if x > 0:
+            return self.move_right(x=x-1, y=y)
+        return False
 
     def move_right(self, x, y):
+        if x >= self.WIDTH:return False
+
         block = self.slots[x, y]
-        if block:
-            block.move_to(x, y + 1)
+        if block and block.has_right:
+            block.swap_right()
+            return True
+        elif x < self.WIDTH - 1:
+            block = self.slots[x+1, y]
+            if block:
+                block.swap_left()
+                return True
+        return False
 
     @property
     def roof_blocks(self):
@@ -64,53 +86,94 @@ class Board(ChronosMixin):
                     blocks[x] = block
         return blocks
 
-    def apply_gravity(self):
-        changed = []
-        for x in self.travel_right:
-            for y in self.travel_down:
-                block = self.slots[x, y]
-                if block:
-                    if block.fall():
-                        changed.append(block)
-        return changed
+    @threaded
+    def _ptick(self, x):
+        for y in self.travel_up:
+            block = self.slots[x, y]
+            if not block: continue
+            self.slots[x, y].tick()
 
-    def apply_combo(self):
-        combos = []
-        for x in self.travel_right:
-            for y in self.travel_down:
-                block = self.slots[x, y]
-                if block:
-                    combos.append(block.combos)
-                    for combo_block in combos:
-                        combo_block.die()
-        return combos
+        print("[{:.2f}] Ticking".format(x / self.WIDTH * 100))
 
-    def tick(self):
-        stable = False
-        while not stable:
-            stable = True  # stable, unless one block says otherwise
-            for x in self.travel_up:
-                for y in self.travel_down:
+    def tick(self, concurrent=False):
+        self.locate_combos()
+
+        self.ticked = self.empty(False)
+
+        if concurrent:
+            for x in self.travel_right:
+                self._ptick(x).join()
+        else:
+            for x in self.travel_right:
+                for y in self.travel_up:
+                    if self.ticked[x, y]: continue
+
                     block = self.slots[x, y]
                     if not block: continue
-                    self.slots[x, y].tick()
-                    if block.state != "STABLE":
-                        stable = False  # i say otherwise!
-            self.wait()
+                    ticked = self.slots[x, y].tick()
 
-        if self.ticks % self.RAISE_TICK_MOD == 0:
-            self.go_up()
+                    for tx, ty in ticked:
+                        self.ticked[tx, ty] = True
+                print("[{:.2f}] Ticking".format(x/self.WIDTH*100))
 
         self.ticks += self.speed
+        # if self.ticks % self.RAISE_TICK_MOD == 0:
+        #     self.go_up()
+
+    def locate_combos(self):
+        self.combos = []
+
+        for x in self.travel_right:
+            for y in self.travel_up:
+                block = self.slots[x, y]
+                if not block or block in self.combos or block.state.name == "FALLING":
+                    continue
+
+                # look horizontal
+                combos_w = [block]
+
+                for pivot in block.right:
+                    if block.matches(pivot) and pivot.state.name != "FALLING":
+                        combos_w.append(pivot)
+                    else:
+                        break
+
+                # look vertical
+                combos_h = [block]
+
+                for pivot in block.up:
+                    if block.matches(pivot):
+                        combos_h.append(pivot)
+                    else:
+                        break
+
+                if len(combos_w) > 2:
+                    self.combos.extend(combos_w)
+                if len(combos_h) > 2:
+                    self.combos.extend(combos_h)
 
     def fill_board(self, height=7):
         possible_heights = [height, height-1, height-2]
         for x in range(0, self.WIDTH):
             for y in range(0, choice(possible_heights)):
                 type = self.generator.suggest(1)[0]
-                block = Block(slots=self.slots, x=x, y=y, type=type)
+                block = Block(board=self, x=x, y=y, type=type)
                 self.slots[x,y] = block
         self.growing_slots = self.generator.suggest_growing()
+
+    def rain(self, n=1, y=None):
+        import random
+        if y is None:
+            y = self.HEIGHT - 1
+
+        available_x = list(range(0, self.WIDTH))
+        random.shuffle(available_x)
+        available_x = available_x[:n]
+        types = self.generator.suggest(n, self.generator.SUGGEST_MODE.TOP)
+
+        for block_type, x in zip(types, available_x):
+            block = Block(board=self, x=x, y=y, type=block_type)
+            self.slots[x, y] = block
 
     def go_up(self):
         slots = np.vstack((self.slots, self.growing_slots))
@@ -182,5 +245,30 @@ class Board(ChronosMixin):
             output = output_row(row_output) + output
         return output
 
-b = Board()
-b.tick()
+    def plot(self):
+        from engine.objects import drawing
+        drawing.plot_game(self)
+
+
+def raining():
+    b = Board(auto_fill=False)
+    i = 0
+    while True:
+        if i % 3 == 0:
+            b.rain(3, y=10)
+
+        i += 1
+        b.plot()
+        b.tick(concurrent=True)
+
+if __name__ == '__main__':
+    # raining()
+    import random
+    i = 0
+    b = Board()
+    while True:
+        b.plot()
+        b.tick()
+        x, y = random.choice(range(0, b.WIDTH-1)), random.choice(range(0, 10))
+        b.move_right(x, y)
+        i += 1

@@ -1,3 +1,4 @@
 # coding: utf-8
 class PowerUp:
-    pass
+    def __init__(self, cost):
+        self.cost = cost
