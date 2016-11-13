@@ -15,7 +15,7 @@ class List extends React.Component {
     searchInput() {
         return (
             <div className="todo-search">
-                <input className="todo-search-field" onChange={this.onChange}
+                <input style={{width: "100%"}} className="todo-search-field" onChange={this.onChange}
                         type="search" value={this.state.searchText}
                         placeholder={this.props.search.placeholder} />
             </div>

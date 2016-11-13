@@ -16,9 +16,21 @@ import List from '../../components/List';
 import RoomListItem from '../../components/Room/RoomListItem';
 
 const ROOM_MOCK = [
-    {name: "Joaozin nunca ganha", kind: 'public', owner: 'Guilherme Diego', players: [2,4]},
-    {name: "Exemplo de sala private", kind: 'private', owner: 'Guilherme Diego', players: [3,4]},
-    {name: "Exemplo de sala cheia pa carai", kind: 'public', owner: 'Guilherme Diego', players: [4,4]}
+    {name: "Joaozin nunca ganha", slots: 4, kind: 'public', owner: 'Guilherme Diego', players: [
+        { name: 'Guilherme Diego', photo: 'https://scontent.fplu1-1.fna.fbcdn.net/v/t1.0-9/14717211_1179280952158814_4296727703080457537_n.jpg?oh=80a54dbdf575bc364df1d2ae3b658780&oe=58CE80FE' },
+        { name: 'X' }
+    ]},
+    {name: "Exemplo de sala private", slots: 4, kind: 'private', owner: 'Rafael Cassau', players: [
+        { name: 'Y' },
+        { name: 'Z' },
+        { name: 'A' }
+    ]},
+    {name: "Exemplo de sala cheia pa carai", slots: 4, kind: 'public', owner: 'Hugo Pena', players: [
+        { name: 'B' },
+        { name: 'AS' },
+        { name: 'EE' },
+        { name: 'YY' }
+    ]}
 ]
 
 const SEARCH_CONFIG = {

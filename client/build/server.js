@@ -2636,7 +2636,7 @@ module.exports =
   
   function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
   
-  var ROOM_MOCK = [{ name: "Joaozin nunca ganha", kind: 'public', owner: 'Guilherme Diego', players: [2, 4] }, { name: "Exemplo de sala private", kind: 'private', owner: 'Guilherme Diego', players: [3, 4] }, { name: "Exemplo de sala cheia pa carai", kind: 'public', owner: 'Guilherme Diego', players: [4, 4] }];
+  var ROOM_MOCK = [{ name: "Joaozin nunca ganha", slots: 4, kind: 'public', owner: 'Guilherme Diego', players: [{ name: 'Guilherme Diego', photo: 'https://scontent.fplu1-1.fna.fbcdn.net/v/t1.0-9/14717211_1179280952158814_4296727703080457537_n.jpg?oh=80a54dbdf575bc364df1d2ae3b658780&oe=58CE80FE' }, { name: 'X' }] }, { name: "Exemplo de sala private", slots: 4, kind: 'private', owner: 'Rafael Cassau', players: [{ name: 'Y' }, { name: 'Z' }, { name: 'A' }] }, { name: "Exemplo de sala cheia pa carai", slots: 4, kind: 'public', owner: 'Hugo Pena', players: [{ name: 'B' }, { name: 'AS' }, { name: 'EE' }, { name: 'YY' }] }];
   
   var SEARCH_CONFIG = {
       placeholder: "Search by name, owner or kind",
@@ -2658,14 +2658,14 @@ module.exports =
                   'main',
                   { className: 'container', __source: {
                           fileName: _jsxFileName,
-                          lineNumber: 36
+                          lineNumber: 48
                       },
                       __self: this
                   },
                   _react2.default.createElement(_Navigation2.default, {
                       __source: {
                           fileName: _jsxFileName,
-                          lineNumber: 37
+                          lineNumber: 49
                       },
                       __self: this
                   }),
@@ -2673,7 +2673,7 @@ module.exports =
                       'div',
                       { className: 'row', __source: {
                               fileName: _jsxFileName,
-                              lineNumber: 38
+                              lineNumber: 50
                           },
                           __self: this
                       },
@@ -2681,7 +2681,7 @@ module.exports =
                           'div',
                           { className: 'col-md-8', __source: {
                                   fileName: _jsxFileName,
-                                  lineNumber: 39
+                                  lineNumber: 51
                               },
                               __self: this
                           },
@@ -2691,7 +2691,7 @@ module.exports =
                               search: SEARCH_CONFIG,
                               __source: {
                                   fileName: _jsxFileName,
-                                  lineNumber: 40
+                                  lineNumber: 52
                               },
                               __self: this
                           })
@@ -3079,7 +3079,7 @@ module.exports =
                       },
                       __self: this
                   },
-                  _react2.default.createElement('input', { className: 'todo-search-field', onChange: this.onChange,
+                  _react2.default.createElement('input', { style: { width: "100%" }, className: 'todo-search-field', onChange: this.onChange,
                       type: 'search', value: this.state.searchText,
                       placeholder: this.props.search.placeholder, __source: {
                           fileName: _jsxFileName,
@@ -3203,21 +3203,57 @@ module.exports =
   
   function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
   
-  var RoomListItem = function RoomListItem(_ref) {
-      var item = _ref.item;
-      return _react2.default.createElement(
-          'li',
-          { className: _RoomListItem2.default['room-item'], __source: {
+  var getPlayerPhotos = function getPlayerPhotos(_ref) {
+      var photo = _ref.photo,
+          name = _ref.name;
+  
+      var children = _react2.default.createElement(
+          'span',
+          {
+              __source: {
                   fileName: _jsxFileName,
                   lineNumber: 6
               },
               __self: undefined
           },
+          ' ',
+          name[0],
+          ' '
+      );
+      if (photo) children = _react2.default.createElement('img', { src: photo, alt: name, __source: {
+              fileName: _jsxFileName,
+              lineNumber: 7
+          },
+          __self: undefined
+      });
+  
+      return _react2.default.createElement(
+          'div',
+          { className: _RoomListItem2.default.photo, __source: {
+                  fileName: _jsxFileName,
+                  lineNumber: 9
+              },
+              __self: undefined
+          },
+          children
+      );
+  };
+  
+  var RoomListItem = function RoomListItem(_ref2) {
+      var item = _ref2.item;
+      return _react2.default.createElement(
+          'li',
+          { className: _RoomListItem2.default['room-item'], __source: {
+                  fileName: _jsxFileName,
+                  lineNumber: 13
+              },
+              __self: undefined
+          },
           _react2.default.createElement(
               'div',
-              { className: 'todo-content ' + item.kind, __source: {
+              { className: 'todo-content ' + item.kind + ' ' + _RoomListItem2.default.content, __source: {
                       fileName: _jsxFileName,
-                      lineNumber: 7
+                      lineNumber: 14
                   },
                   __self: undefined
               },
@@ -3225,7 +3261,7 @@ module.exports =
                   'h4',
                   { className: 'todo-name', __source: {
                           fileName: _jsxFileName,
-                          lineNumber: 8
+                          lineNumber: 15
                       },
                       __self: undefined
                   },
@@ -3236,7 +3272,7 @@ module.exports =
                   {
                       __source: {
                           fileName: _jsxFileName,
-                          lineNumber: 11
+                          lineNumber: 18
                       },
                       __self: undefined
                   },
@@ -3248,7 +3284,7 @@ module.exports =
               _react2.default.createElement('br', {
                   __source: {
                       fileName: _jsxFileName,
-                      lineNumber: 11
+                      lineNumber: 18
                   },
                   __self: undefined
               }),
@@ -3257,7 +3293,7 @@ module.exports =
                   {
                       __source: {
                           fileName: _jsxFileName,
-                          lineNumber: 12
+                          lineNumber: 19
                       },
                       __self: undefined
                   },
@@ -3270,49 +3306,42 @@ module.exports =
           ),
           _react2.default.createElement(
               'div',
-              { className: _RoomListItem2.default.photos, __source: {
+              { className: _RoomListItem2.default.controls, __source: {
                       fileName: _jsxFileName,
-                      lineNumber: 14
-                  },
-                  __self: undefined
-              },
-              item.players.map(function (p) {
-                  return _react2.default.createElement('img', { className: _RoomListItem2.default['photo-item'], src: p.image, alt: p.name, __source: {
-                          fileName: _jsxFileName,
-                          lineNumber: 15
-                      },
-                      __self: undefined
-                  });
-              })
-          ),
-          _react2.default.createElement(
-              'div',
-              { className: _RoomListItem2.default.buttons, __source: {
-                      fileName: _jsxFileName,
-                      lineNumber: 17
+                      lineNumber: 21
                   },
                   __self: undefined
               },
               _react2.default.createElement(
                   'a',
-                  { className: 'btn btn-default', __source: {
+                  { className: 'btn btn-info', __source: {
                           fileName: _jsxFileName,
-                          lineNumber: 18
+                          lineNumber: 22
                       },
                       __self: undefined
                   },
                   'SPEC'
               ),
-              item.players.length != item.slots ? _react2.default.createElement(
+              _react2.default.createElement(
                   'a',
-                  { className: 'btn btn-primary', href: '', __source: {
+                  { className: 'btn btn-primary ' + (item.players.length == item.slots && 'disabled'), href: '', __source: {
                           fileName: _jsxFileName,
-                          lineNumber: 19
+                          lineNumber: 23
                       },
                       __self: undefined
                   },
                   'JOIN'
-              ) : null
+              )
+          ),
+          _react2.default.createElement(
+              'div',
+              { className: _RoomListItem2.default.photos, __source: {
+                      fileName: _jsxFileName,
+                      lineNumber: 25
+                  },
+                  __self: undefined
+              },
+              item.players.map(getPlayerPhotos)
           )
       );
   };
@@ -3363,11 +3392,16 @@ module.exports =
   
   
   // module
-  exports.push([module.id, ".RoomListItem-room-item-2GeRF:after {\n    content: none!important\n}\n\n.RoomListItem-room-item-2GeRF h4 {\n    font-size: 20px;\n    margin: 0;\n}\n", "", {"version":3,"sources":["/./components/Room/RoomListItem.css"],"names":[],"mappings":"AAAA;IACI,uBAAuB;CAC1B;;AAED;IACI,gBAAgB;IAChB,UAAU;CACb","file":"RoomListItem.css","sourcesContent":[".room-item:after {\n    content: none!important\n}\n\n.room-item h4 {\n    font-size: 20px;\n    margin: 0;\n}\n"],"sourceRoot":"webpack://"}]);
+  exports.push([module.id, ".RoomListItem-room-item-2GeRF:after {\n    content: none!important\n}\n\n.RoomListItem-room-item-2GeRF {\n    min-height: 95px;\n}\n\n.RoomListItem-room-item-2GeRF h4 {\n    font-size: 20px;\n    margin: 0;\n}\n\n.RoomListItem-photos-2cz7y, .RoomListItem-controls-20-54 {\n    float: right\n}\n\n.RoomListItem-search-1O6VW {\n    width: 100%\n}\n\n.RoomListItem-controls-20-54 a {\n    margin-left: 10px\n}\n\n.RoomListItem-photos-2cz7y {\n    margin-right: 40px\n}\n\n.RoomListItem-content-1s6-L {\n    float: left\n}\n\n.RoomListItem-photo-5vOSF {\n    width: 50px;\n    height: 50px;\n    background: #2C3E50;\n    border: 2px solid #34495E;\n    border-radius: 5px;\n    overflow: hidden;\n    float: left;\n    margin-left: -10px;\n}\n\n.RoomListItem-photo-5vOSF img {\n    width: 100%\n}\n\n.RoomListItem-photo-5vOSF span {\n    text-align: center;\n    font-weight: 700;\n    width: 100%;\n    display: block;\n    line-height: 49px;\n}\n", "", {"version":3,"sources":["/./components/Room/RoomListItem.css"],"names":[],"mappings":"AAAA;IACI,uBAAuB;CAC1B;;AAED;IACI,iBAAiB;CACpB;;AAED;IACI,gBAAgB;IAChB,UAAU;CACb;;AAED;IACI,YAAY;CACf;;AAED;IACI,WAAW;CACd;;AAED;IACI,iBAAiB;CACpB;;AAED;IACI,kBAAkB;CACrB;;AAED;IACI,WAAW;CACd;;AAED;IACI,YAAY;IACZ,aAAa;IACb,oBAAoB;IACpB,0BAA0B;IAC1B,mBAAmB;IACnB,iBAAiB;IACjB,YAAY;IACZ,mBAAmB;CACtB;;AAED;IACI,WAAW;CACd;;AAED;IACI,mBAAmB;IACnB,iBAAiB;IACjB,YAAY;IACZ,eAAe;IACf,kBAAkB;CACrB","file":"RoomListItem.css","sourcesContent":[".room-item:after {\n    content: none!important\n}\n\n.room-item {\n    min-height: 95px;\n}\n\n.room-item h4 {\n    font-size: 20px;\n    margin: 0;\n}\n\n.photos, .controls {\n    float: right\n}\n\n.search {\n    width: 100%\n}\n\n.controls a {\n    margin-left: 10px\n}\n\n.photos {\n    margin-right: 40px\n}\n\n.content {\n    float: left\n}\n\n.photo {\n    width: 50px;\n    height: 50px;\n    background: #2C3E50;\n    border: 2px solid #34495E;\n    border-radius: 5px;\n    overflow: hidden;\n    float: left;\n    margin-left: -10px;\n}\n\n.photo img {\n    width: 100%\n}\n\n.photo span {\n    text-align: center;\n    font-weight: 700;\n    width: 100%;\n    display: block;\n    line-height: 49px;\n}\n"],"sourceRoot":"webpack://"}]);
   
   // exports
   exports.locals = {
-  	"room-item": "RoomListItem-room-item-2GeRF"
+  	"room-item": "RoomListItem-room-item-2GeRF",
+  	"photos": "RoomListItem-photos-2cz7y",
+  	"controls": "RoomListItem-controls-20-54",
+  	"search": "RoomListItem-search-1O6VW",
+  	"content": "RoomListItem-content-1s6-L",
+  	"photo": "RoomListItem-photo-5vOSF"
   };
 
 /***/ },
