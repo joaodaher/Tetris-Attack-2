@@ -2,7 +2,7 @@
 from random import choice
 
 from engine import error
-from engine.states import Stable, Explode
+from engine.states import Stable, Explode, SwappingRight, SwappingLeft
 
 
 class BlockType:
@@ -53,18 +53,44 @@ class Block:
     def slot_height(self):
         return self.slots.shape[1]
 
+    def swap_left(self):
+        self.state = self.state.detour(SwappingLeft)
+        if self.state.name == "LSWAPPING":
+            block = self.slots[self.x-1, self.y]
+            if block:
+                block.detour(SwappingRight)
+        else:
+            print("Unable to swap left")
+
+    def swap_right(self):
+        self.state = self.state.detour(SwappingRight)
+        if self.state.name == "RSWAPPING":
+            block = self.slots[self.x + 1, self.y]
+            if block:
+                state = block.state.detour(SwappingLeft)
+                self.slots[self.x + 1, self.y].state = state
+        else:
+            print("Unable to swap left")
+
     def tick(self):
+        ticked = [(self.x, self.y)]
         try:
             self.age += 1
-            if self.state.name == "FALLING":
-                self.fall()
-            elif self.state.name == "UNPRESSED":
-                self.strength = self.type.strength
-            elif self.state.name == "MOREPRESS":
-                self.strength -= 1
+            if self.state.ready:
+                if self.state.name == "FALLING":
+                    self.fall()
+                elif self.state.name == "UNPRESSED":
+                    self.strength = self.type.strength
+                elif self.state.name == "MOREPRESS":
+                    self.strength -= 1
+                elif self.state.name == "RSWAPPING":
+                    x, y = self.x+1, self.y
+                    if self.move_to(x, y):
+                        ticked.append((x, y))
             self.state = next(self.state)
         except Explode:
             self.die()
+        return ticked
 
     @property
     def has_left(self):
@@ -78,7 +104,7 @@ class Block:
 
     @property
     def has_right(self):
-        return self.x < self.slot_width
+        return self.x < self.slot_width - 1
 
     @property
     def right(self):
@@ -100,7 +126,7 @@ class Block:
 
     @property
     def has_up(self):
-        return self.y < self.slot_height
+        return self.y < self.slot_height - 1
 
     @property
     def up(self):
@@ -139,18 +165,21 @@ class Block:
         return False
 
     def move_to(self, x, y):
-        if x < 0 or x > self.slots.shape[0] or y < 0 or y > self.slots.shape[1]:
+        if x < 0 or x >= self.slot_width or y < 0 or y >= self.slot_height:
             raise error.OutOfBoard()
 
         target_block = self.slots[x, y]
         if target_block:
             target_block.x = self.x
             target_block.y = self.y
+            target_block.state = next(target_block.state)
         self.slots[self.x, self.y] = target_block
 
         self.x = x
         self.y = y
         self.slots[x, y] = self
+
+        return True
 
     def die(self):
         self.slots[self.x, self.y] = None

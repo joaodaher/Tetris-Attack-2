@@ -36,8 +36,16 @@ class Board:
         super().__init__()
 
     @staticmethod
-    def empty():
-        return np.empty((Board.WIDTH, Board.HEIGHT), dtype=object)
+    def empty(t=None):
+        if isinstance(t, bool):
+            data_type = bool
+        else:
+            data_type = object
+
+        matrix = np.empty((Board.WIDTH, Board.HEIGHT), dtype=data_type)
+        if t is True:
+            matrix = np.logical_not(matrix)
+        return matrix
 
     def clear_board(self):
         self.slots = self.empty()
@@ -45,12 +53,23 @@ class Board:
         self.growing_slots = np.empty(self.HEIGHT, dtype=bool)
 
     def move_left(self, x, y):
-        return self.move_right(x=x+1, y=y)
+        if x > 0:
+            return self.move_right(x=x-1, y=y)
+        return False
 
     def move_right(self, x, y):
+        if x >= self.WIDTH:return False
+
         block = self.slots[x, y]
-        if block:
-            block.move_to(x, y + 1)
+        if block and block.has_right:
+            block.swap_right()
+            return True
+        elif x < self.WIDTH - 1:
+            block = self.slots[x+1, y]
+            if block:
+                block.swap_left()
+                return True
+        return False
 
     @property
     def roof_blocks(self):
@@ -79,15 +98,22 @@ class Board:
     def tick(self, concurrent=False):
         self.locate_combos()
 
+        self.ticked = self.empty(False)
+
         if concurrent:
             for x in self.travel_right:
                 self._ptick(x).join()
         else:
             for x in self.travel_right:
                 for y in self.travel_up:
+                    if self.ticked[x, y]: continue
+
                     block = self.slots[x, y]
                     if not block: continue
-                    self.slots[x, y].tick()
+                    ticked = self.slots[x, y].tick()
+
+                    for tx, ty in ticked:
+                        self.ticked[tx, ty] = True
                 print("[{:.2f}] Ticking".format(x/self.WIDTH*100))
 
         self.ticks += self.speed
@@ -224,8 +250,7 @@ class Board:
         drawing.plot_game(self)
 
 
-if __name__ == '__main__':
-    import time
+def raining():
     b = Board(auto_fill=False)
     i = 0
     while True:
@@ -235,4 +260,15 @@ if __name__ == '__main__':
         i += 1
         b.plot()
         b.tick(concurrent=True)
-        # time.sleep(0.5)
+
+if __name__ == '__main__':
+    # raining()
+    import random
+    i = 0
+    b = Board()
+    while True:
+        b.plot()
+        b.tick()
+        x, y = random.choice(range(0, b.WIDTH-1)), random.choice(range(0, 10))
+        b.move_right(x, y)
+        i += 1

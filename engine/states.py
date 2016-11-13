@@ -68,10 +68,16 @@ class AnyStoneCondition(Condition):
 
 
 class BinaryState:
-    def __init__(self, name, condition, duration=1.0):
+    def __init__(self, name, condition, duration=1.0, detours=None):
         self.name = name
         self.condition = condition
         self.duration = duration
+        self.detours = detours if detours else []
+
+    def detour(self, state):
+        if state in self.detours:
+            return next(state(**self.condition.kwargs))
+        return self
 
     def __next__(self):
         if self.duration > 0.0:
@@ -79,6 +85,10 @@ class BinaryState:
             return self
         else:
             return self.condition.evaluate()
+
+    @property
+    def ready(self):
+        return self.duration == 1.0 or self.duration == 0.0
 
     def __str__(self):
         return self.name
@@ -96,6 +106,13 @@ class ExitState(StopIteration):
         else:
             raise self
 
+    def detour(self, state):
+        return self
+
+    @property
+    def ready(self):
+        return False  # when ready, it raises
+
     def __str__(self):
         return self.name
 
@@ -104,7 +121,8 @@ class Stable(BinaryState):
     def __init__(self, block, duration=1.0):
         name = "STABLE"
         condition = IsFloatingCondition(block)
-        super().__init__(name, condition, duration)
+        detours = [SwappingLeft, SwappingRight]
+        super().__init__(name, condition, duration, detours)
 
 
 class Falling(BinaryState):
@@ -115,10 +133,21 @@ class Falling(BinaryState):
 
 
 class Swapping(BinaryState):
-    def __init__(self, block, duration=1.0):
-        name = "SWAPPING"
+    def __init__(self, name, block, duration=1.0):
         condition = IsFloatingCondition(block)
         super().__init__(name, condition, duration)
+
+
+class SwappingLeft(Swapping):
+    def __init__(self, block, duration=1.0):
+        name = "LSWAPPING"
+        super().__init__(name, block, duration)
+
+
+class SwappingRight(Swapping):
+    def __init__(self, block, duration=1.0):
+        name = "RSWAPPING"
+        super().__init__(name, block, duration)
 
 
 class Standing(BinaryState):
