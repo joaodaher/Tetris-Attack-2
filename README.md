@@ -19,3 +19,7 @@ _[description pending]_
 
 ## Running Locally
 _[description pending]_
+
+## Under the Hood
+
+Want to know how the game works? See more details [here](https://github.com/joaodaher/Tetris-Attack-2/blob/master/README.dev.md)
