@@ -35,6 +35,7 @@
     "sequelize": "3.25.0",
     "source-map-support": "0.4.6",
     "sqlite3": "3.1.8",
+    "uid": "0.0.2",
     "universal-router": "2.0.0",
     "whatwg-fetch": "1.0.0"
   },

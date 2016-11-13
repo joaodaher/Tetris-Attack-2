@@ -1,0 +1,8 @@
+.room-item:after {
+    content: none!important
+}
+
+.room-item h4 {
+    font-size: 20px;
+    margin: 0;
+}

@@ -11,33 +11,40 @@ import React, { PropTypes } from 'react';
 import withStyles from 'isomorphic-style-loader/lib/withStyles';
 import s from './Home.css';
 
+import NavBar from '../../components/Navigation';
+import List from '../../components/List';
+import RoomListItem from '../../components/Room/RoomListItem';
+
+const ROOM_MOCK = [
+    {name: "Joaozin nunca ganha", kind: 'public', owner: 'Guilherme Diego', players: [2,4]},
+    {name: "Exemplo de sala private", kind: 'private', owner: 'Guilherme Diego', players: [3,4]},
+    {name: "Exemplo de sala cheia pa carai", kind: 'public', owner: 'Guilherme Diego', players: [4,4]}
+]
+
+const SEARCH_CONFIG = {
+    placeholder: "Search by name, owner or kind",
+    fields: ['name', 'owner', 'kind']
+}
+
 class Home extends React.Component {
   static propTypes = {
-    news: PropTypes.arrayOf(PropTypes.shape({
-      title: PropTypes.string.isRequired,
-      link: PropTypes.string.isRequired,
-      contentSnippet: PropTypes.string,
-    })).isRequired,
+
   };
 
   render() {
     return (
-      <div className={s.root}>
-        <div className={s.container}>
-          <h1 className={s.title}>React.js News</h1>
-          <ul className={s.news}>
-            {this.props.news.map((item, index) => (
-              <li key={index} className={s.newsItem}>
-                <a href={item.link} className={s.newsTitle}>{item.title}</a>
-                <span
-                  className={s.newsDesc}
-                  dangerouslySetInnerHTML={{ __html: item.contentSnippet }}
-                />
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
+        <main className='container'>
+            <NavBar />
+            <div className="row">
+                <div className="col-md-8">
+                    <List
+                        renderedItem={RoomListItem}
+                        items={ROOM_MOCK}
+                        search={SEARCH_CONFIG}
+                    />
+                </div>
+            </div>
+        </main>
     );
   }
 }
