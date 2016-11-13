@@ -13,7 +13,7 @@ _[description pending]_
 ### Chars
 _[description pending]_
 
-### Perks
+#### Powerups
 _[description pending]_
 
 
