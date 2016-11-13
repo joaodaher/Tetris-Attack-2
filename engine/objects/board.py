@@ -13,10 +13,12 @@ class Board:
 
     RAISE_TICK_MOD = 10
 
-    def __init__(self, speed=1, auto_fill=True):
+    def __init__(self, position=1, speed=1, auto_fill=True):
         from engine.factory import BlockTypeGenerator
 
         self.generator = BlockTypeGenerator(board=self)
+
+        self.position = position
 
         self.slots = None
         self.growing_slots = None
