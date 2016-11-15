@@ -8,11 +8,11 @@ class RoomFullException(Exception):
 
 class TooFewPlayers(Exception):
     def __init__(self, players, *args, **kwargs):
-        self.player = players
+        self.players = players
         super().__init__(*args, **kwargs)
 
 
 class WaitingForPlayers(Exception):
     def __init__(self, players, *args, **kwargs):
-        self.player = players
+        self.players = players
         super().__init__(*args, **kwargs)

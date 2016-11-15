@@ -134,4 +134,12 @@ class BlockTypeGenerator:
 
 
 class PowerUpGenerator:
-    pass
+    def __init__(self, board):
+        self.board = board
+        self.powerups = board.character.powerups
+
+    def buy(self):
+        for cost, powerup in self.powerups.items():
+            if self.board.points >= cost:
+                return powerup
+        return None

@@ -9,12 +9,13 @@ ROUND_DELAY = 2  # seconds between ticks
 
 
 class Room:
-    def __init__(self, mode=None):
+    def __init__(self, private=False, mode=None):
         self.id = uuid.uuid4().hex
         self.boards = {}
         self.spectators = []
         self.ready = {}
         self.mode = mode
+        self.private = private
 
     def join(self, player, spectator=False):
         if spectator:
@@ -53,6 +54,14 @@ class Room:
                 not_ready.append(player)
         if not_ready:
             raise error.WaitingForPlayers(players=not_ready)
+
+    def start(self):
+        for player, board in self.boards:
+            board.tick()
+
+    @property
+    def players(self):
+        return self.boards.keys()
 
     @property
     def players_n(self):

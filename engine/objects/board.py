@@ -4,6 +4,7 @@ from random import choice
 import numpy as np
 
 from engine import threaded
+from engine.factory import PowerUpGenerator
 from engine.objects.blocks import Block
 
 
@@ -13,28 +14,29 @@ class Board:
 
     RAISE_TICK_MOD = 10
 
-    def __init__(self, position=1, speed=1, auto_fill=True):
+    def __init__(self, position=1, character=None, speed=1, auto_fill=True):
         from engine.factory import BlockTypeGenerator
-
-        self.generator = BlockTypeGenerator(board=self)
-
         self.position = position
+        self.character = character
 
         self.slots = None
         self.growing_slots = None
         self.incoming_slots = None
 
         self.powerups = []
+        self.points = 0
 
         self.ticks = 0
         self.speed = speed
+
+        self.generator = BlockTypeGenerator(board=self)
+        # self.armory = PowerUpGenerator(board=self)
 
         self.clear_board()
         if auto_fill:
             self.fill_board()
 
         self.combos = []
-
         super().__init__()
 
     @staticmethod
@@ -171,7 +173,7 @@ class Board:
         available_x = list(range(0, self.WIDTH))
         random.shuffle(available_x)
         available_x = available_x[:n]
-        types = self.generator.suggest(n, self.generator.SUGGEST_MODE.TOP)
+        types = self.generator.suggest(n, self.generator.SUGGEST_MODE.FAST)
 
         for block_type, x in zip(types, available_x):
             block = Block(board=self, x=x, y=y, type=block_type)
@@ -264,7 +266,7 @@ def raining():
         b.tick(concurrent=True)
 
 if __name__ == '__main__':
-    # raining()
+    raining()
     import random
     i = 0
     b = Board()
