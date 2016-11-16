@@ -46,7 +46,13 @@ class Home extends React.Component {
   render() {
     return (
         <main className='container'>
-            <NavBar />
+            <NavBar auth={{
+                name: 'Guilherme Diego',
+                photo: 'https://scontent.fplu1-1.fna.fbcdn.net/v/t1.0-9/14717211_1179280952158814_4296727703080457537_n.jpg?oh=80a54dbdf575bc364df1d2ae3b658780&oe=58CE80FE',
+                coins: 5000
+            }}>
+                <h2 style={{margin: "20px 0"}}>Tetris Attack</h2>
+            </NavBar>
             <div className="row">
                 <div className="col-md-8">
                     <List

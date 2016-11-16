@@ -1,12 +1,14 @@
 import React from 'react'
+
+import uid from 'uid';
+
+import UserImage from '../UserImage'
 import withStyles from 'isomorphic-style-loader/lib/withStyles';
 import s from './RoomListItem.css';
 
-const getPlayerPhotos = ({ photo , name }) => {
-    let children = (<span> {name[0]} </span>)
-    if (photo) children = <img src={photo} alt={name} />
+const getPlayerPhotos = (user) => {
 
-    return (<div className={s.photo}>{children}</div>)
+    return (<UserImage key={uid()} className={s.photo} user={user} />)
 }
 
 const RoomListItem = ({item}) => (
@@ -20,7 +22,7 @@ const RoomListItem = ({item}) => (
          </div>
          <div className={s.controls}>
             <a className='btn btn-info'>SPEC</a>
-            <a className={'btn btn-primary ' + (item.players.length == item.slots && 'disabled') } href=''>JOIN</a> 
+            <a className={'btn btn-primary ' + (item.players.length == item.slots && 'disabled') } href=''>JOIN</a>
         </div>
          <div className={s.photos}>
             {item.players.map(getPlayerPhotos)}

@@ -1,45 +1,49 @@
-/**
- * React Starter Kit (https://www.reactstarterkit.com/)
- *
- * Copyright © 2014-2016 Kriasoft, LLC. All rights reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE.txt file in the root directory of this source tree.
- */
-
-.root {
-  margin: 0;
+.navigation {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
 }
 
-.link {
-  display: inline-block;
-  padding: 3px 8px;
-  text-decoration: none;
-  font-size: 1.125em; /* ~18px */
+.authimage {
+    width: 50px;
+    float: right;
+    height: 50px;
+    margin-top: -4px;
 }
 
-.link,
-.link:active,
-.link:visited {
-  color: rgba(255, 255, 255, 0.6);
+.authinfo {
+    float: left;
+    width: calc(100% - 80px);
 }
 
-.link:hover {
-  color: rgba(255, 255, 255, 1);
+.authinfo h5 {
+    margin: 3px 0;
+    font-size: 16px;
 }
 
-.highlight {
-  margin-right: 8px;
-  margin-left: 8px;
-  border-radius: 3px;
-  background: rgba(0, 0, 0, 0.15);
-  color: #fff;
+.authcard {
+    box-sizing: border-box;
+    width: 100%;
+    float:right;
+    max-width: 240px;
+    background: #34495e;
+    padding: 10px;
+    border-radius: 7px;
+    max-height: 80px;
 }
 
-.highlight:hover {
-  background: rgba(0, 0, 0, 0.3);
+.authcard .btn {
+    padding: 3px;
+    font-size: 12px;
 }
 
-.spacer {
-  color: rgba(255, 255, 255, 0.3);
+.register, .login {
+    float: right;
+    margin-left: 10px;
+}
+
+.login {
+    color: #ECF0F1;
+    text-decoration: underline;
 }
