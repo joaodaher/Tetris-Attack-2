@@ -28,8 +28,8 @@ class BlockType:
     @classmethod
     def hostile_types(cls):
         return [
-            BlockType('stone', "#967300"),
-            BlockType('steel', "#BDBDBD"),
+            BlockType('xstone', "#967300"),
+            BlockType('zsteel', "#BDBDBD"),
         ]
 
     def __str__(self):
@@ -53,7 +53,7 @@ class Block:
         self.pressure = MAX_PRESSURE
         self.strength = self.type.strength
 
-        self.state = Stable(block=self, duration=0.0)
+        self._state = Stable(block=self, duration=0.0)
         self.age = age
 
     @property
@@ -65,7 +65,7 @@ class Block:
         return self.slots.shape[1]
 
     def swap_left(self):
-        self.state = self.state.detour(SwappingLeft)
+        self._state = self.state.detour(SwappingLeft)
         if self.state.name == "LSWAPPING":
             block = self.slots[self.x-1, self.y]
             if block:
@@ -74,7 +74,7 @@ class Block:
             print("Unable to swap left")
 
     def swap_right(self):
-        self.state = self.state.detour(SwappingRight)
+        self._state = self.state.detour(SwappingRight)
         if self.state.name == "RSWAPPING":
             block = self.slots[self.x + 1, self.y]
             if block:
@@ -89,7 +89,7 @@ class Block:
             self.age += 1
             if self.state.ready:
                 if self.state.name == "FALLING":
-                    self.fall()
+                    ticked.extend(self.fall())
                 elif self.state.name == "UNPRESSED":
                     self.pressure = MAX_PRESSURE
                 elif self.state.name == "MOREPRESS":
@@ -98,10 +98,14 @@ class Block:
                     x, y = self.x+1, self.y
                     if self.move_to(x, y):
                         ticked.append((x, y))
-            self.state = next(self.state)
+            self._state = next(self.state)
         except Explode:
             self.die()
         return ticked
+
+    @property
+    def state(self):
+        return self._state
 
     @property
     def has_left(self):
@@ -170,10 +174,10 @@ class Block:
         return 0
 
     def fall(self):
+        ticked = [(self.x, self.y)]
         if self.is_floating:
             self.move_to(x=self.x, y=self.y - 1)
-            return True
-        return False
+        return ticked
 
     def move_to(self, x, y):
         if x < 0 or x >= self.slot_width or y < 0 or y >= self.slot_height:
@@ -191,6 +195,22 @@ class Block:
         self.slots[x, y] = self
 
         return True
+
+    @property
+    def is_floating(self):
+        if self.y == 0:
+            return False
+        for block in self.contact_down:
+            if block and block.state.name != 'FALLING':
+                return False
+        return True
+
+    @property
+    def contact_down(self):
+        pivot = self.y
+        while pivot > 0:
+            pivot -= 1
+            yield self.slots[self.x, pivot]
 
     def die(self):
         self.slots[self.x, self.y] = None
@@ -215,75 +235,136 @@ class Block:
 
 
 class SuperBlock(Block):
-    def __init__(self, board, x, y, width=1, height=1, type=None, age=0):
-        self.width = width
-        self.height = height
+    @classmethod
+    def create(cls, board, x, y, width=1, height=1, type=None, age=0):
+        blocks = []
+        for h in range(y, y + height):
+            for w in range(x, x + width):
+                blocks.append(SuperBlock(board=board, head=None, next_block=None, x=w, y=h, type=type, age=age))
+
+        for i in range(0, len(blocks)-1):
+            block = blocks[i]
+            block.head = blocks[0] if i != 0 else None
+            block.next_block = blocks[i+1]
+            blocks[i] = block
+
+        return blocks
+
+    def __init__(self, board, x, y, head, next_block, type=None, age=0):
+        self.head = head
+        self.next_block = next_block
+        type = type or BLOCK_HOSTILE_TYPES[0]
         super().__init__(board, x, y, type, age)
 
     @property
-    def x_end(self):
-        return self.x + self.width - 1
-
-    @property
-    def y_end(self):
-        return self.y + self.height - 1
-
-    @property
-    def travel_up(self):
-        return range(self.y, self.y_end + 1)
-
-    @property
-    def travel_down(self):
-        return range(self.y_end, self.y - 1, -1)
-
-    @property
-    def travel_right(self):
-        return range(self.x, self.x_end + 1)
-
-    @property
-    def travel_left(self):
-        return range(self.x_end, self.x - 1, -1)
+    def next(self):
+        b = self
+        while b.next_block:
+            yield b.next_block
+            b = b.next_block
+        return None
 
     def left(self):
-        pivot = self.x
-        while pivot > 0:
-            pivot -= 1
-            for y in self.travel_up:
-                yield self.slots[pivot, y]
+        if self.head:
+            return self.head.left
+        else:
+            pivot = self.x
+            while pivot > 0:
+                pivot -= 1
+                for y in self.travel_up:
+                    yield self.slots[pivot, y]
 
     @property
     def right(self):
-        pivot = self.x_end
-        while pivot < self.slot_width - 1:
-            pivot += 1
-            for y in self.travel_up:
-                yield self.slots[pivot, y]
+        if self.head:
+            return self.head.left
+        else:
+            pivot = self.travel_right[-1]
+            while pivot < self.slot_width - 1:
+                pivot += 1
+                for y in self.travel_up:
+                    yield self.slots[pivot, y]
 
     @property
     def up(self):
-        pivot = self.y_end
-        while pivot < self.slot_height - 1:
-            pivot += 1
-            for x in self.travel_right:
-                yield self.slots[x, pivot]
+        if self.head:
+            return self.head.left
+        else:
+            pivot = self.y
+            while pivot < self.slot_height - 1:
+                pivot += 1
+                for x in self.travel_right:
+                    yield self.slots[x, pivot]
 
     @property
     def down(self):
-        pivot = self.y
-        while pivot > 0:
-            pivot -= 1
-            for x in self.travel_right:
-                yield self.slots[x, pivot]
+        if self.head:
+            return self.head.left
+        else:
+            pivot = self.y
+            while pivot > 0:
+                pivot -= 1
+                for x in self.travel_right:
+                    yield self.slots[x, pivot]
+
+    @property
+    def travel_right(self):
+        all_x = [self.x]
+        for block in self.next:
+            if block.y != self.y: break
+            all_x.append(block.x)
+        return all_x
+
+    @property
+    def travel_left(self):
+        return reversed(self.travel_right)
+
+    @property
+    def travel_up(self):
+        y = self.y
+        yield y
+        for block in self.next:
+            if block.x != self.x: continue
+            y = block.y
+            yield y
+        yield y+1
+
+    @property
+    def travel_down(self):
+        return reversed(self.travel_up)
+
+    @property
+    def contact_down(self):
+        if self.head:
+            return self.head.contact_down
+        else:
+            pivot = self.y
+            while pivot > 0:
+                pivot -= 1
+                for x in self.travel_right:
+                    yield self.slots[x, pivot]
+                return None
+
+    @property
+    def state(self):
+        if self.head:
+            self._state = self.head._state
+        return self._state
 
     def fall(self):
-        if self.is_floating:
-            self.move_to(x=self.x, y=self.y - 1)
-            return True
-        return False
+        if self.head:
+            return self.head.fall()
+        else:
+            ticked = []
+            if self.is_floating:
+                t = super().fall()  # drop head
+                ticked.extend(t)
+                for block in self.next:
+                    t = super(SuperBlock, block).fall()  # drop siblings
+                    ticked.extend(t)
+            return ticked
 
-    def move_to(self, x, y):
-        for pivot_x in self.travel_right:
-            moved = super().move_to(pivot_x, y)
-        # FIXME
+    def __gt__(self, *args, **kwargs):
+        return super().__gt__(*args, **kwargs)
 
 

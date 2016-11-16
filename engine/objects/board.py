@@ -5,7 +5,7 @@ import numpy as np
 
 from engine import threaded
 from engine.factory import PowerUpGenerator
-from engine.objects.blocks import Block, BLOCK_HOSTILE_TYPES
+from engine.objects.blocks import Block, BLOCK_HOSTILE_TYPES, SuperBlock
 
 
 class Board:
@@ -130,7 +130,7 @@ class Board:
         for x in self.travel_right:
             for y in self.travel_up:
                 block = self.slots[x, y]
-                if not block or block in self.combos or block.state.name == "FALLING":
+                if not block or block in self.combos or block.state.name == "FALLING" or isinstance(block, SuperBlock):
                     continue
 
                 # look horizontal
@@ -295,13 +295,16 @@ def raining():
         b.tick(concurrent=True)
 
 if __name__ == '__main__':
-    raining()
+    # raining()
     import random
     i = 0
     b = Board()
+    for sb in SuperBlock.create(b, x=2, y=9, width=3, height=2):
+        b.slots[sb.x, sb.y] = sb
+
     while True:
         b.plot()
         b.tick()
-        x, y = random.choice(range(0, b.WIDTH-1)), random.choice(range(0, 10))
-        b.move_right(x, y)
+        # x, y = random.choice(range(0, b.WIDTH-1)), random.choice(range(0, 10))
+        # b.move_right(x, y)
         i += 1
