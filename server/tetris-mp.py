@@ -1,11 +1,12 @@
 import time
 
-from flask import Flask
+from flask import Flask, request, jsonify
 from flask_socketio import Namespace, SocketIO, emit, send
 from flask_socketio import join_room, leave_room
 
 from engine import error
 from engine.game.room import Room
+from models import User, marvel_generator
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -105,6 +106,36 @@ class GameNamespace(Namespace):
                 'players_n': 1
             }
         emit('status', info, room=room.id)
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    email = request.form.get('email')
+    password = request.form.get('password')
+    user = User.login(email=email, password=password)
+
+    if user:
+        data = {'user': user.to_mongo()}
+    else:
+        data = {'error': "User not found"}
+    return jsonify(**data)
+
+
+@app.route('/signup', methods=['POST', 'GET'])
+def signup():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        nickname = request.form.get('nickname')
+        user = User.create(email=email, password=password, nickname=nickname)
+        data = {'user': user.to_mongo()} if user else {}
+    elif request.method == 'GET':
+        data = {
+            'nicknames': marvel_generator(amount=3)
+        }
+    else:
+        data = {}
+    return jsonify(**data)
 
 
 socketio.on_namespace(RoomNamespace('/room'))
