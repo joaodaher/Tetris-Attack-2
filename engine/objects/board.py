@@ -5,7 +5,7 @@ import numpy as np
 
 from engine import threaded
 from engine.factory import PowerUpGenerator
-from engine.objects.blocks import Block
+from engine.objects.blocks import Block, BLOCK_HOSTILE_TYPES
 
 
 class Board:
@@ -151,10 +151,13 @@ class Board:
                     else:
                         break
 
+                current_combo = []
                 if len(combos_w) > 2:
-                    self.combos.extend(combos_w)
+                    current_combo.extend(combos_w)
                 if len(combos_h) > 2:
-                    self.combos.extend(combos_h)
+                    current_combo.extend(combos_h)
+                current_combo = list(set(current_combo))
+                self.combos.append(current_combo)
 
     def fill_board(self, height=7):
         possible_heights = [height, height-1, height-2]
@@ -252,6 +255,32 @@ class Board:
     def plot(self):
         from engine.objects import drawing
         drawing.plot_game(self)
+
+    def combo_intensity(self):
+        size = 0
+        for combo in self.combos:
+            size += len(combo)
+        return size
+
+    def attack(self, board):
+        intensity = self.combo_intensity()
+
+
+
+    def be_attacked(self):
+        pass
+
+
+class Attack:
+    def __init__(self, sender, receiver):
+        pass
+
+    def create_attack(self, size):
+        block_type = BLOCK_HOSTILE_TYPES[int(size >= 10)]
+
+        blocks = []
+        for n in range(0, size):
+            pass  # FIXME
 
 
 def raining():

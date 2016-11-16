@@ -58,10 +58,15 @@ class Room:
     def start(self):
         for player, board in self.boards:
             board.tick()
+            # FIXME
+
+    def target_board(self, board):
+        pass  # FIXME
+
 
     @property
     def players(self):
-        return self.boards.keys()
+        return list(self.boards.keys())
 
     @property
     def players_n(self):

@@ -2,7 +2,7 @@
 from collections import defaultdict
 from random import randrange, choice
 
-from engine.objects.blocks import BLOCK_TYPES
+from engine.objects.blocks import BLOCK_TYPES, BLOCK_HOSTILE_TYPES
 
 
 class BlockTypeGenerator:

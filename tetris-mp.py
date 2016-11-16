@@ -1,6 +1,7 @@
 import time
-from flask import Flask, render_template
-from flask_socketio import Namespace, SocketIO, emit
+
+from flask import Flask
+from flask_socketio import Namespace, SocketIO, emit, send
 from flask_socketio import join_room, leave_room
 
 from engine import error
@@ -13,14 +14,9 @@ socketio = SocketIO(app)
 ROOMS = {}
 
 
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-
 class RoomNamespace(Namespace):
     def on_connect(self):
-        pass
+        send("Connected!")
 
     def on_disconnect(self):
         pass
@@ -30,20 +26,18 @@ class RoomNamespace(Namespace):
         ROOMS[room.id] = room
         join_room(room.id)
 
-        emit("status", "all ok")
-
         self.room_status(room=room)
 
     def on_join(self, data):
-        uid = data['uid']
+        room_id = data['room_id']
         user = data['user']
         spectator = data['spectator']
 
-        if uid in ROOMS:
-            room = ROOMS[uid]
+        if room_id in ROOMS:
+            room = ROOMS[room_id]
             try:
                 room.join(user, spectator=spectator)
-                join_room(uid)
+                join_room(room_id)
                 self.room_status(room=room)
             except error.RoomFullException:
                 emit('status', {'error': "Room is full"})
@@ -62,7 +56,7 @@ class RoomNamespace(Namespace):
     def room_status(self, room):
         data = {
             'id': room.id,
-            'players': room.boards.keys()
+            'players': room.players
         }
         emit('status', data, room=room.id)
 

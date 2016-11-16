@@ -25,11 +25,21 @@ class BlockType:
             BlockType('diamond', "#C832FF"),
         ]
 
+    @classmethod
+    def hostile_types(cls):
+        return [
+            BlockType('stone', "#967300"),
+            BlockType('steel', "#BDBDBD"),
+        ]
+
     def __str__(self):
         return self.name[0]
 
 
 BLOCK_TYPES = BlockType.generate_types()
+BLOCK_HOSTILE_TYPES = BlockType.hostile_types()
+
+MAX_PRESSURE = 3
 
 
 class Block:
@@ -40,6 +50,7 @@ class Block:
         self.y = y
 
         self.type = type or choice(BLOCK_TYPES)
+        self.pressure = MAX_PRESSURE
         self.strength = self.type.strength
 
         self.state = Stable(block=self, duration=0.0)
@@ -80,9 +91,9 @@ class Block:
                 if self.state.name == "FALLING":
                     self.fall()
                 elif self.state.name == "UNPRESSED":
-                    self.strength = self.type.strength
+                    self.pressure = MAX_PRESSURE
                 elif self.state.name == "MOREPRESS":
-                    self.strength -= 1
+                    self.pressure -= 1
                 elif self.state.name == "RSWAPPING":
                     x, y = self.x+1, self.y
                     if self.move_to(x, y):
@@ -137,7 +148,7 @@ class Block:
 
     @property
     def is_crushed(self):
-        return self.strength == 0
+        return self.pressure == 0
 
     @property
     def is_floating(self):
@@ -201,3 +212,78 @@ class Block:
 
     def __hash__(self):
         return hash((self.x, self.y))
+
+
+class SuperBlock(Block):
+    def __init__(self, board, x, y, width=1, height=1, type=None, age=0):
+        self.width = width
+        self.height = height
+        super().__init__(board, x, y, type, age)
+
+    @property
+    def x_end(self):
+        return self.x + self.width - 1
+
+    @property
+    def y_end(self):
+        return self.y + self.height - 1
+
+    @property
+    def travel_up(self):
+        return range(self.y, self.y_end + 1)
+
+    @property
+    def travel_down(self):
+        return range(self.y_end, self.y - 1, -1)
+
+    @property
+    def travel_right(self):
+        return range(self.x, self.x_end + 1)
+
+    @property
+    def travel_left(self):
+        return range(self.x_end, self.x - 1, -1)
+
+    def left(self):
+        pivot = self.x
+        while pivot > 0:
+            pivot -= 1
+            for y in self.travel_up:
+                yield self.slots[pivot, y]
+
+    @property
+    def right(self):
+        pivot = self.x_end
+        while pivot < self.slot_width - 1:
+            pivot += 1
+            for y in self.travel_up:
+                yield self.slots[pivot, y]
+
+    @property
+    def up(self):
+        pivot = self.y_end
+        while pivot < self.slot_height - 1:
+            pivot += 1
+            for x in self.travel_right:
+                yield self.slots[x, pivot]
+
+    @property
+    def down(self):
+        pivot = self.y
+        while pivot > 0:
+            pivot -= 1
+            for x in self.travel_right:
+                yield self.slots[x, pivot]
+
+    def fall(self):
+        if self.is_floating:
+            self.move_to(x=self.x, y=self.y - 1)
+            return True
+        return False
+
+    def move_to(self, x, y):
+        for pivot_x in self.travel_right:
+            moved = super().move_to(pivot_x, y)
+        # FIXME
+
+
