@@ -6,10 +6,17 @@
     height: 330px;
 }
 
-
 .photo {
+    width: 100px;
+    height: 100px;
     margin: 0 auto 20px;
     border: 3px solid #34495E;
+    border-radius: 7px;
+    overflow: hidden;
+}
+
+.img {
+    width: 100%;
 }
 
 .name {

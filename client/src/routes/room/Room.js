@@ -8,7 +8,7 @@ import RoomCard from '../../components/Room/RoomCard'
 const RoomHeader = () => (
     <div className="row">
         <div className="col-md-8">
-            <h4> [ROOM] Sala de testinho bolado é nois </h4>
+            <h5> [ROOM] Sala de testinho bolado é nois </h5>
             <span>
                 <span className='pull-left' style={{marginRight: 20}}>
                     <strong> RoomID </strong> #MB238HVDW0256

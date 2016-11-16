@@ -9,10 +9,18 @@
     width: 50px;
     float: right;
     height: 50px;
-    margin-top: -4px;
+    margin: 0 auto;
+    border-radius: 7px;
+    overflow: hidden;
+}
+
+.authimage img {
+    width: 100%
 }
 
 .authinfo {
+    box-sizing: border-box;
+    padding-left: 10px;
     float: left;
     width: calc(100% - 80px);
 }
@@ -30,10 +38,11 @@
     background: #34495e;
     padding: 10px;
     border-radius: 7px;
-    max-height: 80px;
+    max-height: 70px;
 }
 
-.authcard .btn {
+.options {
+    margin-top: 4px;
     padding: 3px;
     font-size: 12px;
 }

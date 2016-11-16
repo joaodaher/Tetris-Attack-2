@@ -16,7 +16,7 @@ const UserImage = ({ user, className = '' }) => {
         return (<UserWrap className={className} />)
 
     const childrenElement = user.photo ?
-                                (<img src={user.photo} alt={user.name} />) :
+                                (<img className={s.img} src={user.photo} alt={user.name} />) :
                                 (<span> {getInitials(user.name)} </span>)
 
     return (

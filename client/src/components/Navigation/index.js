@@ -22,7 +22,7 @@ class Navigation extends React.Component {
                     </div>
                     <div className='col-md-4'>
                         <div className="btn-group">
-                            <button data-toggle="dropdown" className="btn btn-inverse dropdown-toggle" type="button">
+                            <button data-toggle="dropdown" className={cx("btn btn-inverse dropdown-toggle", s.options)} type="button">
                                 <span className="fui-gear"></span>
                             </button>
                             <ul role="menu" className="dropdown-menu">
@@ -53,10 +53,10 @@ class Navigation extends React.Component {
   render() {
     return (
         <div className={cx('row', s.navigation)}>
-            <div className='col-md-6'>
+            <div className='col-md-8'>
                 {this.props.children}
             </div>
-            <div className='col-md-6'>
+            <div className='col-md-4'>
                 {this.props.auth ? this.authComponent() : this.noAuthComponent()}
             </div>
         </div>
